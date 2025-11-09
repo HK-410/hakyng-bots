@@ -2,8 +2,8 @@
   "name": "hakyung-x-bots",
   "private": true,
   "scripts": {
-    "start:dev": "vercel dev",
-    "build": "pnpm --filter \"@hakyung/x-bot-toolkit\" run build"
+    "build": "pnpm -r run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
