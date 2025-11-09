@@ -185,7 +185,7 @@ ${shipshinResultsForLLM.join('\n')}
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'openai/gpt-oss-120b',
       temperature: 0.75,
     });
 
