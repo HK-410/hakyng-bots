@@ -262,7 +262,7 @@ Ensure the 'details' array is sorted by your rank (1st to 5th).`;
       
       for (const reply of finalReplies) { 
         try {
-          let replyContent = `[${reply.rank}위: ${reply.persona} (${reply.luck_level})]
+          let replyContent = `[${reply.rank}위: ${reply.persona} (${reply.shipshin} / ${reply.luck_level})]
 ${reply.explanation}
 
 🍀 행운의 아이템: ${reply.lucky_item}`;
