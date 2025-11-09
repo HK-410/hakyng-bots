@@ -32,6 +32,7 @@ export class GroqClient {
    * @param systemPrompt The system prompt defining the AI's role and rules.
    * @param userPrompt The user prompt containing the specific request.
    * @param model The LLM model to use for the generation.
+   * @param temperature The LLM model to use for the generation.
    * @param responseFormat The desired response format.
    * @returns A promise that resolves to the parsed JSON object or a string.
    */
@@ -39,13 +40,14 @@ export class GroqClient {
     systemPrompt: string, 
     userPrompt: string,
     model: string = 'openai/gpt-oss-120b',
+    temperature: number = 0.75,
     responseFormat?: GroqCompletionCreateParams['response_format']
   ): Promise<T | string> {
     const callIdentifier = Math.random().toString(36).substring(7);
     console.log(`[GroqClient-${callIdentifier}] generateResponse called.`);
     console.log(`[GroqClient-${callIdentifier}]   Model: ${model}`);
-    console.log(`[GroqClient-${callIdentifier}]   System Prompt: ${systemPrompt.substring(0, 200)}...`); // Log truncated prompt
-    console.log(`[GroqClient-${callIdentifier}]   User Prompt: ${userPrompt.substring(0, 200)}...`); // Log truncated prompt
+    console.log(`[GroqClient-${callIdentifier}]   System Prompt: ${systemPrompt}`); // Log truncated prompt
+    console.log(`[GroqClient-${callIdentifier}]   User Prompt: ${userPrompt}`); // Log truncated prompt
     if (responseFormat) {
       console.log(`[GroqClient-${callIdentifier}]   Response Format: ${JSON.stringify(responseFormat)}`);
     }
@@ -56,7 +58,7 @@ export class GroqClient {
         { role: 'user', content: userPrompt },
       ],
       model: model,
-      temperature: 0.75,
+      temperature: temperature,
       stream: false,
     };
 
@@ -71,7 +73,7 @@ export class GroqClient {
       console.error(`[GroqClient-${callIdentifier}] Groq API did not return any content.`);
       throw new Error('Groq API did not return any content.');
     }
-    console.log(`[GroqClient-${callIdentifier}] Generated Content (truncated): ${generatedContent.substring(0, 200)}...`);
+    console.log(`[GroqClient-${callIdentifier}] Generated Content (truncated): ${generatedContent}`);
 
     if (responseFormat?.type === 'json_object' || responseFormat?.type === 'json_schema') {
       try {

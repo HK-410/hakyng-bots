@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
+import TurndownService from 'turndown';
 import * as cheerio from 'cheerio';
 import { GroqClient, TwitterClient } from '@hakyung/x-bot-toolkit';
 
@@ -28,68 +29,112 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
     });
     console.log(`[${runIdentifier}] Clients initialized.`);
 
-    // 3. Get current date
+    // 3. Get current date and check for special events
     const now = new Date();
     const kstOffset = 9 * 60 * 60 * 1000;
     const kstDate = new Date(now.getTime() + kstOffset);
-    const month = kstDate.toLocaleString('en-US', { month: 'long' });
+    const year = kstDate.getFullYear();
+    const month = kstDate.getUTCMonth() + 1;
     const day = kstDate.getUTCDate();
-    const dateString = `${month} ${day}`;
-    console.log(`[${runIdentifier}] Target date (KST): ${dateString}`);
+    const koreanDateString = `${month}월 ${day}일`;
+    const apiDateString = `${kstDate.toLocaleString('en-US', { month: 'long' })} ${day}`;
+    console.log(`[${runIdentifier}] Target date (KST): ${year}년 ${koreanDateString}`);
 
-    let observances: string[] = [];
+    const specialEvents: string[] = [];
+    if (month === 11 && day === 10) {
+      if (year === 2025)
+        specialEvents.push('나날 봇이 오늘부터 서비스를 시작합니다!')
+      else
+        specialEvents.push('나날 봇의 생일입니다. 나날 봇은 2025년 11월 10일에 서비스가 시작되었습니다.');
+    }
+    if (month === 4 && day === 10) {
+      specialEvents.push('나날 봇을 만들어주신 창조주 @HaKyung410 님의 생일입니다. 하경은 2002년 4월 10일에 태어난 것으로 알려져 있습니다.');
+    }
+    if (specialEvents.length > 0) {
+      console.log(`[${runIdentifier}] Special event detected: ${specialEvents.join(', ')}`);
+    }
+
+    let observances = '';
 
     // 4. Fetch data from Wikipedia API
-    console.log(`[${runIdentifier}] Attempting to fetch observances from Wikipedia for ${dateString}...`);
+    console.log(`[${runIdentifier}] Attempting to fetch observances from Wikipedia for ${apiDateString}`);
     try {
       const headers = { 
         'User-Agent': 'NaNalBot/1.0 (https://github.com/HK-410/hakyng-bots/tree/main/apps/nanal/; hakyung410+nanalbot@gmail.com)' 
       };
-      const sectionsUrl = `https://en.wikipedia.org/w/api.php?action=parse&page=${dateString}&prop=sections&format=json`;
+      const sectionsUrl = `https://en.wikipedia.org/w/api.php?action=parse&page=${apiDateString}&prop=sections&format=json`;
       const sectionsResponse = await axios.get(sectionsUrl, { headers });
       const sections = sectionsResponse.data.parse.sections;
       const holidaySection = sections.find((s: any) => s.line === 'Holidays and observances');
 
       if (holidaySection) {
         const sectionIndex = holidaySection.index;
-        const contentUrl = `https://en.wikipedia.org/w/api.php?action=parse&page=${dateString}&prop=text&section=${sectionIndex}&format=json`;
+        const contentUrl = `https://en.wikipedia.org/w/api.php?action=parse&page=${apiDateString}&prop=text&section=${sectionIndex}&format=json`;
         const contentResponse = await axios.get(contentUrl, { headers });
-        const htmlContent = contentResponse.data.parse.text['*'];
-        const $ = cheerio.load(htmlContent);
-        
-        $('li').each((i, el) => {
-          const text = $(el).text().trim();
-          if (text) observances.push(text);
+
+        const turndownService = new TurndownService({
+          headingStyle: 'atx', // h2 -> ##
+          bulletListMarker: '*', // ul/li -> *
+          codeBlockStyle: 'fenced', // ```
         });
+        
+        turndownService.addRule('keepLinkTextOnly', {
+          filter: 'a',
+          replacement: function (content) {
+            return content;
+          }
+        });
+
+        const $ = cheerio.load(contentResponse.data.parse.text['*']);
+
+        $('.mw-editsection').remove();
+        $('.mw-references-wrap').remove();
+        $('.mw-ext-cite-error').remove();
+        $('.mw-heading').remove();
+        $('sup.reference').remove();
+
+        const contentHtml = $('.mw-parser-output').html();
+        
+        observances = turndownService.turndown(contentHtml);
+        console.log("result:::", observances);
       }
-      console.log(`[${runIdentifier}] Wikipedia fetch result: Found ${observances.length} observances.`);
     } catch (apiError) {
       console.error(`[${runIdentifier}] Wikipedia API fetch failed:`, apiError);
     }
 
-    // 5. Generate tweet with Groq LLM
-    const dataSourceLog = observances.length > 0 ? 'Wikipedia' : 'Fallback (invented day)';
-    console.log(`[${runIdentifier}] Generating tweet content. Data source for LLM: ${dataSourceLog}.`);
     const systemPrompt = `
-You are "나날(NaNal)", a witty bot that tweets about today's date.
+You are "나날", an information bot that tweets facts about today's date.
 
 <Your Goal>
-Create a single, focused tweet in Korean, under 280 characters. Your tweet should have ONE main theme and, if relevant, one or two related fun facts. Avoid just listing things.
+Create a single, focused, and informative tweet in Korean, under 280 characters. Your tweet should have ONE main theme and, if relevant, one or two related fun facts. The current year will be provided. Use it to calculate anniversaries (e.g., "N주년"). You will be given a list of observance objects, each with a "title" and a "description". Use the description to understand the context and tell a better story.
 
 <How to Choose the Theme>
 Analyze the provided list of observances and pick the main theme using this priority:
-1.  **Korean Holiday:** If one exists, it's your main theme.
-2.  **Famous Global Holiday:** If no Korean holiday, pick a globally recognized one.
-3.  **Most Interesting Topic:** If neither of the above, pick the most fun or quirky topic from the list.
-4.  **Creative Fallback:** If the list is empty, invent a fun, special day for today.
+1.  **Special Event:** If a special event is provided, it MUST be the main theme.
+2.  **Korean Holiday:** If no special event, and a Korean holiday exists, it is the main theme.
+3.  **Famous Global Holiday:** If none of the above, pick a globally recognized one.
+4.  **Most Interesting Topic:** If none of the above, pick the most interesting topic from the list.
+5.  **Creative Fallback:** If all lists are empty, invent a fun, special day and present it as a fact.
 
 <How to Write the Tweet>
 - Focus on the main theme you chose.
 - You can add one or two other interesting observances from the list as secondary fun facts, but don't let them distract from the main theme.
-- Tell a small story or share a fun perspective. Start with an engaging opening like "11월 10일, 오늘은..."
+- State facts clearly and concisely.
+- The tone must be neutral, objective, and informative.
+- **CRITICAL: Avoid suggestive or conversational endings like '~해요', '~보세요', '~까요?'. Instead, use declarative endings like '~입니다', '~날입니다'.**
+- Do not end the tweet with an ellipsis ("..."). Finish the sentence completely.
 - The tweet MUST NOT contain any hashtags.
+- Start the tweet with the format: "[Month]월 [Day]일, " (e.g., "11월 10일, ")
 `;
-    const userPrompt = `Today is ${dateString}. Here is the list of observances:\n- ${observances.join('\n- ')}\n\nFollow the instructions to create a tweet.`;
+    const userPrompt = `Today is ${year}년 ${koreanDateString}.
+${specialEvents.length > 0 ? `\n**Today's Special Events:**\n- ${specialEvents.join('\n- ')}\n` : ''}
+Here is the list of observances from Wikipedia:
+
+\`\`\`
+${observances}
+\`\`\`
+
+Follow the instructions to create a tweet.`;
 
     const tweetContent = await groqClient.generateResponse(
       systemPrompt,
@@ -105,7 +150,7 @@ Analyze the provided list of observances and pick the main theme using this prio
     // 6. Post to Twitter (or log for dry run)
     if (isDryRun) {
       console.log(`[${runIdentifier}] --- DRY RUN ---`);
-      console.log(`[${runIdentifier}] Tweet content for ${dateString} (${twitterClient.calculateBytes(tweetContent)} bytes):`);
+      console.log(`[${runIdentifier}] Tweet content for ${koreanDateString} (${twitterClient.calculateBytes(tweetContent)} bytes):`);
       console.log(tweetContent);
       return res.status(200).send(`[DRY RUN] Tweet content: ${tweetContent}`);
     }

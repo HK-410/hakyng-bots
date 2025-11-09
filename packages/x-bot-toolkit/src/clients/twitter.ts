@@ -35,7 +35,7 @@ export class TwitterClient {
   async postTweet(content: string): Promise<string> {
     const callIdentifier = Math.random().toString(36).substring(7);
     console.log(`[TwitterClient-${callIdentifier}] postTweet called.`);
-    console.log(`[TwitterClient-${callIdentifier}]   Original Content (truncated): ${content.substring(0, 200)}...`);
+    console.log(`[TwitterClient-${callIdentifier}]   Original Content (truncated): ${content}`);
 
     let finalContent = content;
 
@@ -56,7 +56,7 @@ export class TwitterClient {
           currentLength += charWeight;
       }
       finalContent = truncatedText + ellipsis;
-      console.log(`[TwitterClient-${callIdentifier}]   Truncated Content (truncated): ${finalContent.substring(0, 200)}...`);
+      console.log(`[TwitterClient-${callIdentifier}]   Truncated Content (truncated): ${finalContent}`);
     }
 
     try {
@@ -77,7 +77,7 @@ export class TwitterClient {
   async postThread(mainTweetContent: string, replies: string[]): Promise<void> {
     const callIdentifier = Math.random().toString(36).substring(7);
     console.log(`[TwitterClient-${callIdentifier}] postThread called.`);
-    console.log(`[TwitterClient-${callIdentifier}]   Main Tweet Content (truncated): ${mainTweetContent.substring(0, 200)}...`);
+    console.log(`[TwitterClient-${callIdentifier}]   Main Tweet Content (truncated): ${mainTweetContent}`);
     console.log(`[TwitterClient-${callIdentifier}]   Number of replies: ${replies.length}`);
 
 
@@ -96,7 +96,7 @@ export class TwitterClient {
     for (const replyContent of replies) {
       try {
         let finalReplyContent = replyContent;
-        console.log(`[TwitterClient-${callIdentifier}]   Original Reply Content (truncated): ${replyContent.substring(0, 200)}...`);
+        console.log(`[TwitterClient-${callIdentifier}]   Original Reply Content (truncated): ${replyContent}`);
 
 
         if (this.calculateBytes(finalReplyContent) > MAX_TWEET_BYTES) {
@@ -116,7 +116,7 @@ export class TwitterClient {
               currentLength += charWeight;
           }
           finalReplyContent = truncatedText + ellipsis;
-          console.log(`[TwitterClient-${callIdentifier}]   Truncated Reply Content (truncated): ${finalReplyContent.substring(0, 200)}...`);
+          console.log(`[TwitterClient-${callIdentifier}]   Truncated Reply Content (truncated): ${finalReplyContent}`);
         }
 
         const replyResult = await this.client.v2.tweet(finalReplyContent, {

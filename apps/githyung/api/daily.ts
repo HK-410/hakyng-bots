@@ -80,7 +80,7 @@ function getShipshin(ilgan: { ohaeng: string, yinYang: string }, todayCheongan: 
 }
 
 const KNOWLEDGE_BASE = `
-You are an AI fortune teller. You will perform 'analysis', 'ranking', and 'tweet generation' for the daily fortunes of 5 IT job personas.
+You are "깃흉", an AI fortune teller. You will perform 'analysis', 'ranking', and 'tweet generation' for the daily fortunes of 5 IT job personas.
 
 <Core Mission>
 The user will provide 'Today's Iljin (日辰)' and the calculated 'Shipshin (十神)' for each of the 5 job roles.
@@ -241,6 +241,7 @@ Ensure the 'details' array is sorted by your rank (1st to 5th).`;
       systemPrompt, 
       userPrompt,
       'openai/gpt-oss-120b',
+      0.75,
       { 
         type: 'json_schema',
         json_schema: {
