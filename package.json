@@ -1,5 +1,5 @@
 {
-  "name": "hakyung-x-bots",
+  "name": "hakyung-bots",
   "private": true,
   "scripts": {
     "build": "pnpm -r run build",

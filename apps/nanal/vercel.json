@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd ../.. && pnpm install",
+  "outputDirectory": ".",
+  "buildCommand": "cd ../.. && pnpm run build",
+  "crons": [
+    {
+      "path": "/api/daily",
+      "schedule": "0 15 * * *"
+    }
+  ]
+}

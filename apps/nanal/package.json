@@ -1,0 +1,20 @@
+{
+  "name": "nanal",
+  "version": "1.0.0",
+  "description": "A bot that tweets about daily observances.",
+  "main": "api/daily.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@hakyung/x-bot-toolkit": "workspace:*",
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5",
+    "vercel": "^34.2.0",
+    "@vercel/node": "^3.2.0"
+  }
+}

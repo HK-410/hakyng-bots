@@ -41,7 +41,14 @@ export class GroqClient {
     model: string = 'openai/gpt-oss-120b',
     responseFormat?: GroqCompletionCreateParams['response_format']
   ): Promise<T | string> {
-    console.log(`Generating content with Groq API using model: ${model}...`);
+    const callIdentifier = Math.random().toString(36).substring(7);
+    console.log(`[GroqClient-${callIdentifier}] generateResponse called.`);
+    console.log(`[GroqClient-${callIdentifier}]   Model: ${model}`);
+    console.log(`[GroqClient-${callIdentifier}]   System Prompt: ${systemPrompt.substring(0, 200)}...`); // Log truncated prompt
+    console.log(`[GroqClient-${callIdentifier}]   User Prompt: ${userPrompt.substring(0, 200)}...`); // Log truncated prompt
+    if (responseFormat) {
+      console.log(`[GroqClient-${callIdentifier}]   Response Format: ${JSON.stringify(responseFormat)}`);
+    }
 
     const completionParams: GroqCompletionCreateParams = {
       messages: [
@@ -61,20 +68,24 @@ export class GroqClient {
     const generatedContent = chatCompletion.choices[0]?.message?.content;
 
     if (!generatedContent) {
+      console.error(`[GroqClient-${callIdentifier}] Groq API did not return any content.`);
       throw new Error('Groq API did not return any content.');
     }
+    console.log(`[GroqClient-${callIdentifier}] Generated Content (truncated): ${generatedContent.substring(0, 200)}...`);
 
     if (responseFormat?.type === 'json_object' || responseFormat?.type === 'json_schema') {
       try {
         const parsedJson = JSON.parse(generatedContent);
+        console.log(`[GroqClient-${callIdentifier}] Parsed JSON response.`);
         return parsedJson as T;
       } catch (e: any) {
-        console.error('Failed to parse LLM JSON response:', e.message);
-        console.error('Raw LLM output:', generatedContent);
+        console.error(`[GroqClient-${callIdentifier}] Failed to parse LLM JSON response:`, e.message);
+        console.error(`[GroqClient-${callIdentifier}] Raw LLM output:`, generatedContent);
         throw new Error('LLM did not return a valid JSON object as requested.');
       }
     }
 
+    console.log(`[GroqClient-${callIdentifier}] Returning string content.`);
     return generatedContent;
   }
 }
