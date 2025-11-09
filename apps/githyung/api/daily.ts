@@ -179,19 +179,24 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ) {
+  const runIdentifier = Math.random().toString(36).substring(7);
+  console.log(`[githyung-${runIdentifier}] Function start.`);
+
   const authHeader = req.headers['authorization'];
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    console.log(`[githyung-${runIdentifier}] Unauthorized access attempt.`);
     return res.status(401).send('Unauthorized: Access Denied');
   }
   if (req.method !== 'GET') {
+    console.log(`[githyung-${runIdentifier}] Method not allowed: ${req.method}`);
     return res.status(405).send('Method Not Allowed');
   }
 
   const isDryRun = req.query.dryRun === 'true';
-  console.log(`Starting daily run. DryRun: ${isDryRun}`);
+  console.log(`[githyung-${runIdentifier}] Run mode: dryRun=${isDryRun}`);
 
   try {
-    // 1. Initialize Clients with environment variables
+    // 1. Initialize Clients
     const groqClient = new GroqClient(process.env.GROQ_API_KEY as string);
     const twitterClient = new TwitterClient({
       appKey: process.env.X_APP_KEY as string,
@@ -199,6 +204,7 @@ export default async function handler(
       accessToken: process.env.X_ACCESS_TOKEN as string,
       accessSecret: process.env.X_ACCESS_SECRET as string,
     });
+    console.log(`[githyung-${runIdentifier}] Clients initialized.`);
 
     // 2. Core Logic
     const kstTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' });
@@ -209,12 +215,14 @@ export default async function handler(
     const todayCheonganChar: string = iljin.charAt(0);
     const todayCheonganData = CHEONGAN_DB[todayCheonganChar as keyof typeof CHEONGAN_DB];
     const fullDateString = `${kstDate.getFullYear()}년 ${kstDate.getMonth() + 1}월 ${kstDate.getDate()}일`;
+    console.log(`[githyung-${runIdentifier}] Target date (KST): ${fullDateString}, Iljin: ${iljin}`);
 
     const shipshinResultsForLLM: string[] = [];
     for (const [personaName, ilganData] of Object.entries(PERSONA_DB)) {
       const shipshin = getShipshin(ilganData, todayCheonganData);
       shipshinResultsForLLM.push(`- ${personaName}은(는) [${shipshin}]입니다.`);
     }
+    console.log(`[githyung-${runIdentifier}] Calculated Shipshin for all personas.`);
 
     const userPrompt = `Today is ${iljin} (${fullDateString}).
 Today's Iljin (Cheongan) is: '${todayCheonganChar}' (Ohaeng: ${todayCheonganData.ohaeng}).
@@ -227,7 +235,8 @@ Rank all 5 personas from 1st to 5th.
 Generate the complete JSON response strictly following the <Output Format>.
 Ensure the 'details' array is sorted by your rank (1st to 5th).`;
 
-    // 3. Generate content using the Groq client instance
+    // 3. Generate content
+    console.log(`[githyung-${runIdentifier}] Generating fortune content...`);
     const llmResponse = await groqClient.generateResponse<LlmResponseData>(
       systemPrompt, 
       userPrompt,
@@ -244,9 +253,10 @@ Ensure the 'details' array is sorted by your rank (1st to 5th).`;
     );
 
     if (typeof llmResponse === 'string') {
-      console.error('LLM returned a string instead of a JSON object:', llmResponse);
+      console.error(`[githyung-${runIdentifier}] LLM returned a string instead of a JSON object:`, llmResponse);
       throw new Error('Invalid response type from LLM. Expected a JSON object.');
     }
+    console.log(`[githyung-${runIdentifier}] Successfully generated content.`);
 
     const llmResponseData = llmResponse;
     const mainTweetContent = `${fullDateString} 오늘의 직무 운세 🔮\n\n${llmResponseData.mainTweetSummary}`;
@@ -257,7 +267,7 @@ Ensure the 'details' array is sorted by your rank (1st to 5th).`;
 
     // 4. Post to Twitter or log for dry run
     if (!isDryRun) {
-      console.log('--- [LIVE RUN] ---');
+      console.log(`[githyung-${runIdentifier}] Posting tweet thread...`);
       const replyContents = finalReplies.map(reply => 
         `[${reply.rank}위: ${reply.persona} (${reply.shipshin} / ${reply.luck_level})]
 ${reply.explanation}
@@ -265,9 +275,10 @@ ${reply.explanation}
 🍀 행운의 아이템: ${reply.lucky_item}`
       );
       await twitterClient.postThread(mainTweetContent, replyContents);
+      console.log(`[githyung-${runIdentifier}] Successfully posted tweet thread.`);
     } else {
-      console.log('--- [DRY RUN] ---');
-      console.log(`[Main Tweet] (${twitterClient.calculateBytes(mainTweetContent)} bytes):\n${mainTweetContent}`);
+      console.log(`[githyung-${runIdentifier}] --- DRY RUN ---`);
+      console.log(`[githyung-${runIdentifier}] [Main Tweet] (${twitterClient.calculateBytes(mainTweetContent)} bytes):\n${mainTweetContent}`);
       console.log('---------------------------------');
       
       for (const reply of finalReplies) {
@@ -275,7 +286,7 @@ ${reply.explanation}
 ${reply.explanation}
 
 🍀 행운의 아이템: ${reply.lucky_item}`;
-        console.log(`[Reply ${reply.rank}] (${twitterClient.calculateBytes(replyContent)} bytes):\n${replyContent}`);
+        console.log(`[githyung-${runIdentifier}] [Reply ${reply.rank}] (${twitterClient.calculateBytes(replyContent)} bytes):\n${replyContent}`);
         console.log('---------------------------------');
       }
     }
@@ -288,11 +299,8 @@ ${reply.explanation}
     });
 
   } catch (error) {
-    console.error('Error executing handler:', error);
-    let errorMessage = 'An unknown error occurred.';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    console.error(`[githyung-${runIdentifier}] Error executing handler:`, errorMessage);
     return res.status(500).json({
       success: false,
       error: errorMessage,
