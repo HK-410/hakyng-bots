@@ -38,7 +38,8 @@ const handler = async (req: VercelRequest, res: VercelResponse) => {
     const day = kstDate.getUTCDate();
     const koreanDateString = `${month}월 ${day}일`;
     const apiDateString = `${kstDate.toLocaleString('en-US', { month: 'long' })} ${day}`;
-    console.log(`[${runIdentifier}] Target date (KST): ${year}년 ${koreanDateString}`);
+    const dayOfWeek = kstDate.toLocaleString('ko-KR', { weekday: 'long' });
+    console.log(`[${runIdentifier}] Target date (KST): ${year}년 ${koreanDateString}, Day of Week: ${dayOfWeek}`);
 
     const specialEvents: string[] = [];
     if (month === 11 && day === 10) {
@@ -126,7 +127,7 @@ Analyze the provided list of observances and pick the main theme using this prio
 - The tweet MUST NOT contain any hashtags.
 - Start the tweet with the format: "[Month]월 [Day]일, " (e.g., "11월 10일, ")
 `;
-    const userPrompt = `Today is ${year}년 ${koreanDateString}.
+    const userPrompt = `Today is ${year}년 ${koreanDateString} (${dayOfWeek}).
 ${specialEvents.length > 0 ? `\n**Today's Special Events:**\n- ${specialEvents.join('\n- ')}\n` : ''}
 Here is the list of observances from Wikipedia:
 

@@ -215,7 +215,8 @@ export default async function handler(
     const todayCheonganChar: string = iljin.charAt(0);
     const todayCheonganData = CHEONGAN_DB[todayCheonganChar as keyof typeof CHEONGAN_DB];
     const fullDateString = `${kstDate.getFullYear()}년 ${kstDate.getMonth() + 1}월 ${kstDate.getDate()}일`;
-    console.log(`[githyung-${runIdentifier}] Target date (KST): ${fullDateString}, Iljin: ${iljin}`);
+    const dayOfWeek = kstDate.toLocaleString('ko-KR', { weekday: 'long' });
+    console.log(`[githyung-${runIdentifier}] Target date (KST): ${fullDateString}, Iljin: ${iljin}, Day of Week: ${dayOfWeek}`);
 
     const shipshinResultsForLLM: string[] = [];
     for (const [personaName, ilganData] of Object.entries(PERSONA_DB)) {
@@ -224,7 +225,7 @@ export default async function handler(
     }
     console.log(`[githyung-${runIdentifier}] Calculated Shipshin for all personas.`);
 
-    const userPrompt = `Today is ${iljin} (${fullDateString}).
+    const userPrompt = `Today is ${iljin} (${fullDateString}, ${dayOfWeek}).
 Today's Iljin (Cheongan) is: '${todayCheonganChar}' (Ohaeng: ${todayCheonganData.ohaeng}).
 
 Here are the calculated Shipshin for each persona:
