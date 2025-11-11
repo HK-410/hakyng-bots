@@ -1,20 +1,28 @@
 {
   "name": "githyung",
-  "version": "1.0.0",
-  "description": "A bot that tweets about daily fortune based on korean traditional way.",
+  "version": "0.1.0",
   "private": true,
-  "main": "api/daily.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
     "@hakyung/x-bot-toolkit": "workspace:*",
-    "korean-lunar-calendar": "^0.3.6"
+    "korean-lunar-calendar": "^0.3.6",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "next": "16.0.1"
   },
   "devDependencies": {
-    "@types/node": "^24.10.0",
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1",
     "@types/twitter-text": "^3.1.10",
-    "@vercel/node": "^5.5.5",
-    "typescript": "^5.9.3"
+    "@vercel/node": "^5.5.5"
   }
 }

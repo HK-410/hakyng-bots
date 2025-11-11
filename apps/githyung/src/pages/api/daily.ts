@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import KoreanLunarCalendar from 'korean-lunar-calendar';
 import { GroqClient, TwitterClient, LlmResponse } from '@hakyung/x-bot-toolkit';
+import type { NextApiRequest, NextApiResponse } from "next";
 
 // Specific data structures for this bot
 interface LlmReply {
@@ -174,10 +175,9 @@ const TWEET_RULE = `
 
 const systemPrompt = KNOWLEDGE_BASE + '\n\n' + TWEET_RULE;
 
-
 export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse,
+  req: NextApiRequest,
+  res: NextApiResponse,
 ) {
   const runIdentifier = Math.random().toString(36).substring(7);
   console.log(`[githyung-${runIdentifier}] Function start.`);
