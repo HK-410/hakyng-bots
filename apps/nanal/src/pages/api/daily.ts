@@ -72,7 +72,7 @@ export default async function handler(
     console.log(`[${runIdentifier}] Attempting to fetch observances from Wikipedia for ${apiDateString}`);
     try {
       const headers = { 
-        'User-Agent': 'NaNalBot/1.0 (https://github.com/HK-410/hakyng-bots/tree/main/apps/nanal/; hakyung410+nanalbot@gmail.com)' 
+        'User-Agent': 'NaNalBot/1.0 (https://github.com/HK-410/hakyng-bots/tree/main/apps/nanal/; hakyung410+nanal@gmail.com)' 
       };
       const sectionsUrl = `https://ko.wikipedia.org/w/api.php?action=parse&page=${apiDateString}&prop=sections&format=json`;
       const sectionsResponse = await axios.get(sectionsUrl, { headers });
