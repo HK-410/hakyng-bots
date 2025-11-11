@@ -276,7 +276,7 @@ ${reply.explanation}
 
 🍀 행운의 아이템: ${reply.lucky_item}`
       );
-      // await twitterClient.postThread(mainTweetContent, replyContents);
+      await twitterClient.postThread(mainTweetContent, replyContents);
       console.log(`[${runIdentifier}] Successfully posted tweet thread.`);
 
       const weatherfairyResponse = await axios.get(`https://${process.env.WEATHERFAIRY_DOMAIN}/api/daily`, { headers: { Authorization: `Bearer ${process.env.WEATHERFAIRY_CRON_SECRET}` } });
