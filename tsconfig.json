@@ -11,7 +11,7 @@
     "paths": {
       "@hakyung/x-bot-toolkit/*": ["packages/x-bot-toolkit/src/*"]
     },
-    "lib": ["ES2020"]
+    "lib": ["ES2020", "esnext"]
   },
   "exclude": [
     "node_modules"
