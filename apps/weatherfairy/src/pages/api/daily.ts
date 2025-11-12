@@ -164,9 +164,9 @@ export default async function handler(
 
     // 4. Generate tweet content
     const tweetContent = `${fullDateString}
-서울 ${weatherData.seoul.weather ? WEATHER_DICTIONARY[weatherData.seoul.weather].icon : "❓"} - 최고: ${weatherData.seoul.temp.max || "❓"}℃ | 최저: ${weatherData.seoul.temp.min || "❓"}℃
-부산 ${weatherData.busan.weather ? WEATHER_DICTIONARY[weatherData.busan.weather].icon : "❓"} - 최고: ${weatherData.busan.temp.max || "❓"}℃ | 최저: ${weatherData.busan.temp.min || "❓"}℃
-평양 ${weatherData.pyongyang.weather ? WEATHER_DICTIONARY[weatherData.pyongyang.weather].icon : "❓"} - 최고: ${weatherData.pyongyang.temp.max || "❓"}℃ | 최저: ${weatherData.pyongyang.temp.min || "❓"}℃`;
+서울 ${weatherData.seoul.weather ? WEATHER_DICTIONARY[weatherData.seoul.weather].icon : "❓"} - 최고: ${undefined !== weatherData.seoul.temp.max ? Math.round(weatherData.seoul.temp.max) : "❓"}℃ | 최저: ${undefined !== weatherData.seoul.temp.min ? Math.round(weatherData.seoul.temp.min) : "❓"}℃
+부산 ${weatherData.busan.weather ? WEATHER_DICTIONARY[weatherData.busan.weather].icon : "❓"} - 최고: ${undefined !== weatherData.busan.temp.max ? Math.round(weatherData.busan.temp.max) : "❓"}℃ | 최저: ${undefined !== weatherData.busan.temp.min ? Math.round(weatherData.busan.temp.min) : "❓"}℃
+평양 ${weatherData.pyongyang.weather ? WEATHER_DICTIONARY[weatherData.pyongyang.weather].icon : "❓"} - 최고: ${undefined !== weatherData.pyongyang.temp.max ? Math.round(weatherData.pyongyang.temp.max) : "❓"}℃ | 최저: ${undefined !== weatherData.pyongyang.temp.min ? Math.round(weatherData.pyongyang.temp.min) : "❓"}℃`;
 
     // 5. Post to Twitter (or log for dry run)
     if (isDryRun) {
