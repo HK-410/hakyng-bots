@@ -4,9 +4,8 @@
 
 이 프로젝트는 `pnpm` 워크스페이스를 사용하는 모노레포로 구성되어 있습니다.
 
-- `core`: 오늘의 운세 내용을 생성하고 트윗하는 메인 Vercel 서버리스 함수입니다.
+- `core`: 트윗 봇이 작동하는 NextJs 기반 메인 서버입니다.
   - 봇 로직은 `core/src/lib/bots` 디렉토리 아래에 각 봇별로 모듈화되어 있습니다 (`githyung`, `nanal`, `weatherfairy`).
-  - 각 봇의 로직은 `saju.ts`, `prompts.ts`, `events.ts` 등 관련 파일로 분리되어 있습니다.
 - `packages/x-bot-toolkit`: 여러 봇에서 재사용 가능한 유틸리티 및 API 클라이언트 라이브러리입니다.
   - **Groq Client**: Groq (LLM) API와 연동하여 콘텐츠를 생성합니다.
   - **Twitter Client**: Twitter API v2와 연동하여 트윗 스레드를 게시합니다.
@@ -23,7 +22,6 @@
 
 ```bash
 pnpm install
-pnpm exec husky install
 ```
 
 ### 환경변수 설정
@@ -53,6 +51,8 @@ pnpm --filter "@hakyung/x-bot-toolkit" run build
 ```bash
 vercel link
 ```
+
+Vercel Project 설정의 `Root Directory`는 `core`로 설정되어야 합니다.
 
 이후, 아래 명령어를 실행하여 Vercel 개발 서버를 시작합니다.
 
