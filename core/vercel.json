@@ -11,7 +11,7 @@
     },
     {
       "path": "/api/cron/morning",
-      "schedule": "0 21 * * *"
+      "schedule": "0 22 * * *"
     }
   ]
 }
